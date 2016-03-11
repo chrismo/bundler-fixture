@@ -1,8 +1,8 @@
 # Bundler::Fixture
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/bundler/fixture`. To experiment with that code, run `bin/console` for an interactive prompt.
+A simple fixture to generate a for-realz Gemfile.lock with completely fake data.
 
-TODO: Delete this and the text above, and describe your gem
+Bundler has wonderful [fixture tooling](https://github.com/bundler/bundler/blob/master/spec/support/builders.rb) for testing itself, but it's pretty elaborate and hard (for a knucklehead like me) to re-use. I cobbled this together and wanted to re-use it elsewhere and decided to package it up separately.
 
 ## Installation
 
@@ -22,7 +22,12 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+    require 'bundler/fixture'
+
+    bf = BundlerFixture.new(dir: Dir.tmpdir)
+    bf.create_lockfile(gem_specs: bf.create_spec('foo', '1.4.5'))
+
+`BundlerFixture` takes the gem specs and builds an index with the contents, and sets up other dependencies so a `Gemfile.lock` can be built reflecting the dependency tree in all of the passed specs with `Bundler::Definition`. This ensures `Bundler::LockfileParser` will be able to parse the file successfully, handy for testing your own code that's working programatically with its output.
 
 ## Development
 
@@ -32,7 +37,7 @@ To install this gem onto your local machine, run `bundle exec rake install`. To 
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/bundler-fixture.
+Bug reports and pull requests are welcome on GitHub at https://github.com/chrismo/bundler-fixture.
 
 
 ## License
