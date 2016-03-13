@@ -6,31 +6,47 @@ class BundlerFixture
   def initialize(dir: File.join(Dir.tmpdir, 'fake_project_root'))
     @dir = dir
     FileUtils.makedirs @dir
+
+    @sources = Bundler::SourceList.new
+    @sources.add_rubygems_remote('https://rubygems.org')
   end
 
   def clean_up
     FileUtils.rmtree @dir
   end
 
-  def create_lockfile(gem_specs:)
-    dir = @dir
+  # @param [Gem::Specification] gem_dependencies This simulates gem requirements in Gemfile.
+  # @param [Gem::Specification] source_specs This simulates gems in the source index.
+  # @param [boolean] ensure_sources Default is true, makes sure a source exists for each gem_dependency.
+  #                                 Set this to false to require sending in sources in @param source_specs.
+  def create_lockfile(gem_dependencies:, source_specs: [], ensure_sources: true)
     index = Bundler::Index.new
-    deps = []
-    gem_specs.each do |g|
-      index << g
-      deps << Bundler::DepProxy.new(Bundler::Dependency.new(g.name, g.version), g.platform)
-    end
-    spec_set = Bundler::Resolver.resolve(deps, index)
+    Array(source_specs).each { |s| index << s }
+    source.instance_variable_set('@specs', index)
 
-    sources = Bundler::SourceList.new
-    sources.add_rubygems_remote('https://rubygems.org')
-    spec_set.each { |s| s.source = sources.rubygems_sources.first }
+    Array(gem_dependencies).each do |dep|
+      index << create_spec(dep.name, dep.requirement.requirements.first.last)
+    end if ensure_sources
 
-    gemfile_fn = File.join(dir, 'Gemfile.lock')
-    defn = Bundler::Definition.new(gemfile_fn, deps.map(&:dep), sources, true)
+    defn = Bundler::Definition.new(lockfile_filename, Array(gem_dependencies), @sources, {})
     defn.instance_variable_set('@index', index)
-    defn.instance_variable_set('@resolve', spec_set)
-    defn.lock(gemfile_fn)
+    defn.lock(lockfile_filename)
+  end
+
+  def lockfile_filename
+    File.join(@dir, 'Gemfile.lock')
+  end
+
+  def lockfile_contents
+    File.read(lockfile_filename)
+  end
+
+  def create_dependency(name, *requirements)
+    Bundler::Dependency.new(name, requirements, {'source' => source})
+  end
+
+  def source
+    @sources.all_sources.first
   end
 
   def create_spec(name, version, dependencies={})
@@ -38,6 +54,7 @@ class BundlerFixture
       s.name = name
       s.version = Gem::Version.new(version)
       s.platform = 'ruby'
+      s.source = source
       dependencies.each do |name, requirement|
         s.add_dependency name, requirement
       end

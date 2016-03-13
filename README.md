@@ -25,7 +25,7 @@ Or install it yourself as:
     require 'bundler/fixture'
 
     bf = BundlerFixture.new(dir: Dir.tmpdir)
-    bf.create_lockfile(gem_specs: bf.create_spec('foo', '1.4.5'))
+    bf.create_lockfile(gem_dependencies: bf.create_dependency('foo', '1.4.5'))
 
 `BundlerFixture` takes the gem specs and builds an index with the contents, and sets up other dependencies so a `Gemfile.lock` can be built reflecting the dependency tree in all of the passed specs with `Bundler::Definition`. This ensures `Bundler::LockfileParser` will be able to parse the file successfully, handy for testing your own code that's working programatically with its output.
 
