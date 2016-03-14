@@ -19,17 +19,25 @@ class BundlerFixture
   # @param [Gem::Specification] source_specs This simulates gems in the source index.
   # @param [boolean] ensure_sources Default is true, makes sure a source exists for each gem_dependency.
   #                                 Set this to false to require sending in sources in @param source_specs.
-  def create_lockfile(gem_dependencies:, source_specs: [], ensure_sources: true)
+  # @param [Array boolean] update_gems An array of gem names to update to latest, or `true` to update all.
+  #                                    Default is empty Array.
+  def create_lockfile(gem_dependencies:,
+                      source_specs: [],
+                      ensure_sources: true,
+                      update_gems: [])
     index = Bundler::Index.new
     Array(source_specs).each { |s| index << s }
-    source.instance_variable_set('@specs', index)
 
     Array(gem_dependencies).each do |dep|
       index << create_spec(dep.name, dep.requirement.requirements.first.last)
     end if ensure_sources
 
-    defn = Bundler::Definition.new(lockfile_filename, Array(gem_dependencies), @sources, {})
+    update_hash = update_gems === true ? true : {gems: Array(update_gems)}
+    defn = Bundler::Definition.new(lockfile_filename, Array(gem_dependencies), @sources, update_hash)
     defn.instance_variable_set('@index', index)
+    # reading an existing lockfile in will overwrite the hacked up sources with detected
+    # ones from lockfile, so this needs to go here after the constructor is called.
+    source.instance_variable_set('@specs', index)
     defn.lock(lockfile_filename)
   end
 
@@ -39,6 +47,14 @@ class BundlerFixture
 
   def lockfile_contents
     File.read(lockfile_filename)
+  end
+
+  def parsed_lockfile
+    Bundler::LockfileParser.new(lockfile_contents)
+  end
+
+  def parsed_lockfile_spec(gem_name)
+    parsed_lockfile.specs.detect { |s| s.name == gem_name }
   end
 
   def create_dependency(name, *requirements)
