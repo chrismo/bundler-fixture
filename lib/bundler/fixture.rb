@@ -25,6 +25,14 @@ class BundlerFixture
                       source_specs: [],
                       ensure_sources: true,
                       update_gems: [])
+    defn = create_definition(gem_dependencies: gem_dependencies,
+                             source_specs: source_specs,
+                             ensure_sources: ensure_sources,
+                             update_gems: update_gems)
+    defn.lock(lockfile_filename)
+  end
+
+  def create_definition(gem_dependencies:, source_specs:, ensure_sources:, update_gems:)
     index = Bundler::Index.new
     Array(source_specs).each { |s| index << s }
 
@@ -38,7 +46,7 @@ class BundlerFixture
     # reading an existing lockfile in will overwrite the hacked up sources with detected
     # ones from lockfile, so this needs to go here after the constructor is called.
     source.instance_variable_set('@specs', index)
-    defn.lock(lockfile_filename)
+    defn
   end
 
   def lockfile_filename

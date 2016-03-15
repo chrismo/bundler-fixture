@@ -91,6 +91,7 @@ describe Bundler::Fixture do
           @bf.create_spec('foo', '2.5.0', [['bar', '>= 1.0.4']]),
           @bf.create_spec('bar', '1.1.3'),
           @bf.create_spec('bar', '3.2.0'),
+          # @bf.create_spec('quux', '0.0.4'), this works even w/o this. it's not even checked because it's not updated.
           @bf.create_spec('quux', '0.2.0'),
         ], ensure_sources: false, update_gems: 'foo')
 
