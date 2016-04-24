@@ -18,14 +18,14 @@ describe Bundler::Fixture do
       @bf.create_lockfile(gem_dependencies: @bf.create_dependency('foo'))
     end
 
-    it 'will not ensure sources for dependencies if told' do
+    it 'will not ensure sources for dependencies if told, error case' do
       expect { @bf.create_lockfile(
         gem_dependencies: @bf.create_dependency('foo'),
         ensure_sources: false
       ) }.to raise_error(Bundler::GemNotFound)
     end
 
-    it 'will not ensure sources for dependencies if told' do
+    it 'will not ensure sources for dependencies if told, manually provided case' do
       @bf.create_lockfile(
         gem_dependencies: @bf.create_dependency('foo'),
         source_specs: @bf.create_spec('foo', '1.0.0'),
@@ -68,8 +68,7 @@ describe Bundler::Fixture do
         @bf.create_dependency('foo'),
       ], source_specs: [
         @bf.create_spec('foo', '1.0.0', [['bar', '>= 1.0.4']]),
-        @bf.create_spec('bar', '1.1.3'),
-        @bf.create_spec('bar', '1.2.4'),
+        @bf.create_specs('bar', %w(1.1.3 1.2.4)),
       ])
 
       expect(@bf.parsed_lockfile_spec('bar').version.to_s).to eq '1.1.3'
@@ -89,8 +88,7 @@ describe Bundler::Fixture do
         source_specs: [
           @bf.create_spec('foo', '2.4.0', [['bar', '>= 1.0.4']]),
           @bf.create_spec('foo', '2.5.0', [['bar', '>= 1.0.4']]),
-          @bf.create_spec('bar', '1.1.3'),
-          @bf.create_spec('bar', '3.2.0'),
+          @bf.create_specs('bar', %w(1.1.3 3.2.0)),
           # @bf.create_spec('quux', '0.0.4'), this works even w/o this. it's not even checked because it's not updated.
           @bf.create_spec('quux', '0.2.0'),
         ], ensure_sources: false, update_gems: 'foo')

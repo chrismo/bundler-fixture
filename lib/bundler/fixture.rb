@@ -34,7 +34,7 @@ class BundlerFixture
 
   def create_definition(gem_dependencies:, source_specs:, ensure_sources:, update_gems:)
     index = Bundler::Index.new
-    Array(source_specs).each { |s| index << s }
+    Array(source_specs).flatten.each { |s| index << s }
 
     Array(gem_dependencies).each do |dep|
       index << create_spec(dep.name, dep.requirement.requirements.first.last)
@@ -82,6 +82,12 @@ class BundlerFixture
       dependencies.each do |name, requirement|
         s.add_dependency name, requirement
       end
+    end
+  end
+
+  def create_specs(name, versions, dependencies={})
+    versions.map do |version|
+      create_spec(name, version, dependencies)
     end
   end
 end
