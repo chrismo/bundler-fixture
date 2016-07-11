@@ -1,4 +1,6 @@
 require 'bundler/fixture/version'
+require 'bundler'
+require 'tmpdir'
 
 class BundlerFixture
   attr_reader :dir

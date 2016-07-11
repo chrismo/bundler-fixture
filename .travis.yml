@@ -1,4 +1,27 @@
 language: ruby
-rvm:
-  - 2.2.4
-before_install: gem install bundler -v 1.10.6
+
+before_install:
+  - for dir in $(echo $GEM_PATH | tr ':' ' '); do gem uninstall -i $dir bundler -a -x; done
+  - gem install bundler -v $BUNDLER_TEST_VERSION
+  - bundle --version
+
+matrix:
+  include:
+    - rvm: 2.1.10
+      env: BUNDLER_TEST_VERSION=1.12.5
+    - rvm: 2.2.5
+      env: BUNDLER_TEST_VERSION=1.12.5
+    - rvm: 2.3.1
+      env: BUNDLER_TEST_VERSION=1.7.15
+    - rvm: 2.3.1
+      env: BUNDLER_TEST_VERSION=1.8.9
+    - rvm: 2.3.1
+      env: BUNDLER_TEST_VERSION=1.9.10
+    - rvm: 2.3.1
+      env: BUNDLER_TEST_VERSION=1.10.5
+    - rvm: 2.3.1
+      env: BUNDLER_TEST_VERSION=1.11.2
+    - rvm: 2.3.1
+      env: BUNDLER_TEST_VERSION=1.12.5
+    - rvm: 2.3.1
+      env: BUNDLER_TEST_VERSION=1.13.0.rc.1

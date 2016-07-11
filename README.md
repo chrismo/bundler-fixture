@@ -4,6 +4,10 @@ A simple fixture to generate a for-realz Gemfile.lock with completely fake data.
 
 Bundler has wonderful [fixture tooling](https://github.com/bundler/bundler/blob/master/spec/support/builders.rb) for testing itself, but it's pretty elaborate and hard (for a knucklehead like me) to re-use. I cobbled this together and wanted to re-use it elsewhere and decided to package it up separately.
 
+[![Build Status](https://travis-ci.org/chrismo/bundler-fixture.svg?branch=master)](https://travis-ci.org/chrismo/bundler-fixture)
+
+Works with Bundler 1.7+
+
 ## Installation
 
 Add this line to your application's Gemfile:
