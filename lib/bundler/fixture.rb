@@ -37,6 +37,10 @@ class BundlerFixture
   def create_definition(gem_dependencies:, source_specs:, ensure_sources:, update_gems:)
     index = Bundler::Index.new
     Array(source_specs).flatten.each { |s| index << s }
+    if Gem::Version.new(Bundler::VERSION) >= Gem::Version.new('1.14.0')
+      index << Gem::Specification.new("ruby\0", Bundler::RubyVersion.system.to_gem_version_with_patchlevel)
+      index << Gem::Specification.new("rubygems\0", Gem::VERSION)
+    end
 
     Array(gem_dependencies).each do |dep|
       index << create_spec(dep.name, dep.requirement.requirements.first.last)
