@@ -5,8 +5,9 @@ require 'tmpdir'
 class BundlerFixture
   attr_reader :dir
 
-  def initialize(dir: File.join(Dir.tmpdir, 'fake_project_root'))
+  def initialize(dir: File.join(Dir.tmpdir, 'fake_project_root'), gemfile: 'Gemfile')
     @dir = dir
+    @gemfile = gemfile
     FileUtils.makedirs @dir
 
     @sources = Bundler::SourceList.new
@@ -26,7 +27,9 @@ class BundlerFixture
   def create_lockfile(gem_dependencies:,
                       source_specs: [],
                       ensure_sources: true,
-                      update_gems: [])
+                      update_gems: [],
+                      gemfile: nil)
+    @gemfile = gemfile if gemfile
     defn = create_definition(gem_dependencies: gem_dependencies,
                              source_specs: source_specs,
                              ensure_sources: ensure_sources,
@@ -56,7 +59,7 @@ class BundlerFixture
   end
 
   def lockfile_filename
-    File.join(@dir, 'Gemfile.lock')
+    File.join(@dir, "#{@gemfile}.lock")
   end
 
   def lockfile_contents

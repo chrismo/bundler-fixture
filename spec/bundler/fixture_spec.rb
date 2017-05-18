@@ -102,5 +102,15 @@ describe Bundler::Fixture do
       expect(@bf.parsed_lockfile_spec('foo').version.to_s).to eq '2.5.0'
       expect(@bf.parsed_lockfile_spec('quux').version.to_s).to eq '0.0.4'
     end
+
+    it 'handles custom Gemfile name' do
+      @bf.create_lockfile(
+        gem_dependencies: [@bf.create_dependency('foo')], source_specs: [@bf.create_spec('foo', '2.4.0')],
+        ensure_sources: false, gemfile: 'Custom.gemfile')
+            
+      expect(@bf.parsed_lockfile_spec('foo').version.to_s).to eq '2.4.0'
+
+      expect(File.exist?(File.join(@bf.dir, 'Custom.gemfile.lock'))).to be_truthy
+    end
   end
 end
