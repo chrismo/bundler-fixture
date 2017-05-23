@@ -28,19 +28,21 @@ class BundlerFixture
                       source_specs: [],
                       ensure_sources: true,
                       update_gems: [],
-                      gemfile: nil)
+                      gemfile: nil,
+                      ruby_version: nil)
     @gemfile = gemfile if gemfile
     defn = create_definition(gem_dependencies: gem_dependencies,
                              source_specs: source_specs,
                              ensure_sources: ensure_sources,
-                             update_gems: update_gems)
+                             update_gems: update_gems,
+                             ruby_version: ruby_version)
     defn.lock(lockfile_filename)
   end
 
-  def create_definition(gem_dependencies:, source_specs:, ensure_sources:, update_gems:)
+  def create_definition(gem_dependencies:, source_specs:, ensure_sources:, update_gems:, ruby_version: nil)
     index = Bundler::Index.new
     Array(source_specs).flatten.each { |s| index << s }
-    if Gem::Version.new(Bundler::VERSION) >= Gem::Version.new('1.14.0')
+    if bundler_version_or_higher('1.14.0')
       index << Gem::Specification.new("ruby\0", Bundler::RubyVersion.system.to_gem_version_with_patchlevel)
       index << Gem::Specification.new("rubygems\0", Gem::VERSION)
     end
@@ -50,12 +52,17 @@ class BundlerFixture
     end if ensure_sources
 
     update_hash = update_gems === true ? true : {gems: Array(update_gems)}
-    defn = Bundler::Definition.new(lockfile_filename, Array(gem_dependencies), @sources, update_hash)
+    ruby_version_obj = Bundler::RubyVersion.new(ruby_version, nil, nil, nil)
+    defn = Bundler::Definition.new(lockfile_filename, Array(gem_dependencies), @sources, update_hash, ruby_version_obj)
     defn.instance_variable_set('@index', index)
     # reading an existing lockfile in will overwrite the hacked up sources with detected
     # ones from lockfile, so this needs to go here after the constructor is called.
     source.instance_variable_set('@specs', index)
     defn
+  end
+
+  def bundler_version_or_higher(version)
+    Gem::Version.new(Bundler::VERSION) >= Gem::Version.new(version)
   end
 
   def lockfile_filename

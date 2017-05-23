@@ -112,5 +112,13 @@ describe Bundler::Fixture do
 
       expect(File.exist?(File.join(@bf.dir, 'Custom.gemfile.lock'))).to be_truthy
     end
+
+    it 'supports ruby version' do
+      @bf.create_lockfile(
+        gem_dependencies: [@bf.create_dependency('foo')], source_specs: [@bf.create_spec('foo', '2.4.0')],
+        ensure_sources: false, ruby_version: RUBY_VERSION)
+
+      expect(@bf.parsed_lockfile.ruby_version).to eq "ruby #{RUBY_VERSION}p#{RUBY_PATCHLEVEL}"
+    end
   end
 end
