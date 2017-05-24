@@ -31,12 +31,13 @@ class BundlerFixture
                       gemfile: nil,
                       ruby_version: nil)
     @gemfile = gemfile if gemfile
-    defn = create_definition(gem_dependencies: gem_dependencies,
-                             source_specs: source_specs,
-                             ensure_sources: ensure_sources,
-                             update_gems: update_gems,
-                             ruby_version: ruby_version)
-    defn.lock(lockfile_filename)
+    dfn = create_definition(gem_dependencies: gem_dependencies,
+                            source_specs: source_specs,
+                            ensure_sources: ensure_sources,
+                            update_gems: update_gems,
+                            ruby_version: ruby_version)
+    create_gemfile(source_specs, ruby_version)
+    dfn.lock(lockfile_filename)
   end
 
   def create_definition(gem_dependencies:, source_specs:, ensure_sources:, update_gems:, ruby_version: nil)
@@ -53,16 +54,35 @@ class BundlerFixture
 
     update_hash = update_gems === true ? true : {gems: Array(update_gems)}
     ruby_version_obj = Bundler::RubyVersion.new(ruby_version, nil, nil, nil)
-    defn = Bundler::Definition.new(lockfile_filename, Array(gem_dependencies), @sources, update_hash, ruby_version_obj)
-    defn.instance_variable_set('@index', index)
+    dfn = Bundler::Definition.new(lockfile_filename, Array(gem_dependencies), @sources, update_hash, ruby_version_obj)
+    dfn.instance_variable_set('@index', index)
     # reading an existing lockfile in will overwrite the hacked up sources with detected
     # ones from lockfile, so this needs to go here after the constructor is called.
     source.instance_variable_set('@specs', index)
-    defn
+    dfn
+  end
+
+  # NOTE: building this from the Definition itself prevents some tests from working because it affects some
+  # global state in Bundler. I didn't fully debug it, but found this to just be easier.
+  def create_gemfile(source_specs, ruby_version)
+    lines = []
+    lines << "source 'https://rubygems.org'"
+    Array(source_specs).flatten.each do |spec|
+      name, version = [spec.name, spec.version]
+      line = "gem '#{name}'"
+      line << ", '#{version}'"
+      lines << line
+    end
+    lines << "ruby '#{ruby_version}'"
+    File.open(gemfile_filename, 'w') { |f| f.puts lines }
   end
 
   def bundler_version_or_higher(version)
     Gem::Version.new(Bundler::VERSION) >= Gem::Version.new(version)
+  end
+
+  def gemfile_filename
+    File.join(@dir, "#{@gemfile}")
   end
 
   def lockfile_filename
