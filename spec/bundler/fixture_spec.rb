@@ -168,7 +168,7 @@ describe Bundler::Fixture do
       @bf.create_gemfile(gem_dependencies: deps)
       guts = File.read(@bf.gemfile_filename)
       expect(guts).to have_line "gem 'foo', '1.2'"
-      expect(guts).to have_line "gem 'bar', '>= 0'"
+      expect(guts).to have_line "gem 'bar'"
       expect(guts).to have_line "gem 'qux', '>= 1.0.9', '~> 1.0'"
     end
   end

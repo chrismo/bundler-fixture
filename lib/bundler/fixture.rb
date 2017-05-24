@@ -80,7 +80,10 @@ class BundlerFixture
                             [spec.name, spec.requirement]
                           end
       line = "gem '#{name}'"
-      line << ", #{requirement_to_s(requirement)}" if requirement
+      if requirement
+        req_output = requirement_to_s(requirement)
+        line << ", #{req_output}" unless req_output.empty?
+      end
       lines << line
     end
     lines << "ruby '#{ruby_version}'" if ruby_version
@@ -90,7 +93,11 @@ class BundlerFixture
   def requirement_to_s(req)
     case req
     when Gem::Requirement
-      req.as_list.map { |r| "'#{r.gsub(/^= /, '')}'" }.join(', ')
+      req.as_list.delete_if do |r|
+        r == '>= 0'
+      end.map do |r|
+        "'#{r.gsub(/^= /, '')}'"
+      end.join(', ')
     when String
       "'#{req}'"
     when Array
