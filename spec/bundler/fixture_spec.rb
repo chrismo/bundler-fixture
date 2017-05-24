@@ -1,5 +1,14 @@
 require 'spec_helper'
 
+RSpec::Matchers.define :have_line do |expected|
+  match do |actual|
+    actual.split(/\n/).map(&:strip).include?(expected)
+  end
+  failure_message do |actual|
+    "expected line <#{expected}> would be in:\n#{actual}"
+  end
+end
+
 describe Bundler::Fixture do
   it 'has a version number' do
     expect(Bundler::Fixture::VERSION).not_to be nil
@@ -34,7 +43,7 @@ describe Bundler::Fixture do
     end
   end
 
-  context 'bundler behavior' do
+  context 'create lockfile' do
     it 'resolves to most recent available gem' do
       @bf.create_lockfile(gem_dependencies: [
         @bf.create_dependency('foo')
@@ -107,10 +116,60 @@ describe Bundler::Fixture do
       @bf.create_lockfile(
         gem_dependencies: [@bf.create_dependency('foo')], source_specs: [@bf.create_spec('foo', '2.4.0')],
         ensure_sources: false, gemfile: 'Custom.gemfile')
-            
+
       expect(@bf.parsed_lockfile_spec('foo').version.to_s).to eq '2.4.0'
 
       expect(File.exist?(File.join(@bf.dir, 'Custom.gemfile.lock'))).to be_truthy
+    end
+
+    it 'supports ruby version' do
+      gem_dependencies = [@bf.create_dependency('foo')]
+      @bf.create_lockfile(
+        gem_dependencies: gem_dependencies, source_specs: [@bf.create_spec('foo', '2.4.0')],
+        ensure_sources: false, ruby_version: RUBY_VERSION)
+
+      @bf.create_gemfile(gem_dependencies: gem_dependencies, ruby_version: RUBY_VERSION)
+
+      dfn = Bundler::Definition.build(@bf.gemfile_filename, @bf.lockfile_filename, nil)
+      expect(dfn.ruby_version.to_s).to eq "ruby #{RUBY_VERSION}"
+
+      # Not in lockfile before 1.12
+      if BundlerFixture.bundler_version_or_higher('1.12.0')
+        expect(@bf.parsed_lockfile.ruby_version).to eq "ruby #{RUBY_VERSION}p#{RUBY_PATCHLEVEL}"
+      end
+    end
+  end
+
+  context 'create gemfile' do
+    it 'supports ruby version' do
+      gem_dependencies = [@bf.create_dependency('foo')]
+
+      @bf.create_gemfile(gem_dependencies: gem_dependencies, ruby_version: RUBY_VERSION)
+
+      dfn = Bundler::Definition.build(@bf.gemfile_filename, @bf.lockfile_filename, nil)
+      expect(dfn.ruby_version.to_s).to eq "ruby #{RUBY_VERSION}"
+    end
+
+    def deps_hash
+      {'foo' => '1.2', 'bar' => nil, 'qux' => ['~> 1.0', '>= 1.0.9']}
+    end
+
+    it 'supports simple string gem dependencies' do
+      @bf.create_gemfile(gem_dependencies: deps_hash)
+      guts = File.read(@bf.gemfile_filename)
+      expect(guts).to have_line "gem 'foo', '1.2'"
+      expect(guts).to have_line "gem 'bar'"
+      expect(guts).to have_line "gem 'qux', '~> 1.0', '>= 1.0.9'"
+    end
+
+    it 'supports gem dependency objects' do
+      gems = deps_hash
+      deps = gems.map { |gem, requirement| @bf.create_dependency(gem, requirement) }
+      @bf.create_gemfile(gem_dependencies: deps)
+      guts = File.read(@bf.gemfile_filename)
+      expect(guts).to have_line "gem 'foo', '1.2'"
+      expect(guts).to have_line "gem 'bar'"
+      expect(guts).to have_line "gem 'qux', '>= 1.0.9', '~> 1.0'"
     end
   end
 end
