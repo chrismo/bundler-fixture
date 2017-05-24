@@ -5,6 +5,10 @@ require 'tmpdir'
 class BundlerFixture
   attr_reader :dir
 
+  def self.bundler_version_or_higher(version)
+    Gem::Version.new(Bundler::VERSION) >= Gem::Version.new(version)
+  end
+
   def initialize(dir: File.join(Dir.tmpdir, 'fake_project_root'), gemfile: 'Gemfile')
     @dir = dir
     @gemfile = gemfile
@@ -12,6 +16,10 @@ class BundlerFixture
 
     @sources = Bundler::SourceList.new
     @sources.add_rubygems_remote('https://rubygems.org')
+  end
+
+  def bundler_version_or_higher(version)
+    self.class.bundler_version_or_higher(version)
   end
 
   def clean_up
@@ -36,7 +44,6 @@ class BundlerFixture
                             ensure_sources: ensure_sources,
                             update_gems: update_gems,
                             ruby_version: ruby_version)
-    create_gemfile(source_specs, ruby_version)
     dfn.lock(lockfile_filename)
   end
 
@@ -62,23 +69,35 @@ class BundlerFixture
     dfn
   end
 
-  # NOTE: building this from the Definition itself prevents some tests from working because it affects some
-  # global state in Bundler. I didn't fully debug it, but found this to just be easier.
-  def create_gemfile(source_specs, ruby_version)
+  def create_gemfile(gem_dependencies:, ruby_version: nil)
     lines = []
     lines << "source 'https://rubygems.org'"
-    Array(source_specs).flatten.each do |spec|
-      name, version = [spec.name, spec.version]
+    Array(gem_dependencies).each do |spec|
+      name, requirement = case spec
+                          when Array
+                            spec
+                          when Gem::Dependency, Bundler::Dependency
+                            [spec.name, spec.requirement]
+                          end
       line = "gem '#{name}'"
-      line << ", '#{version}'"
+      line << ", #{requirement_to_s(requirement)}" if requirement
       lines << line
     end
-    lines << "ruby '#{ruby_version}'"
+    lines << "ruby '#{ruby_version}'" if ruby_version
     File.open(gemfile_filename, 'w') { |f| f.puts lines }
   end
 
-  def bundler_version_or_higher(version)
-    Gem::Version.new(Bundler::VERSION) >= Gem::Version.new(version)
+  def requirement_to_s(req)
+    case req
+    when Gem::Requirement
+      req.as_list.map { |r| "'#{r.gsub(/^= /, '')}'" }.join(', ')
+    when String
+      "'#{req}'"
+    when Array
+      req.map { |r| "'#{r}'" }.join(', ')
+    else
+      req
+    end
   end
 
   def gemfile_filename
