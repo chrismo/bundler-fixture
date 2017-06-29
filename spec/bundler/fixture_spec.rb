@@ -172,4 +172,20 @@ describe Bundler::Fixture do
       expect(guts).to have_line "gem 'qux', '>= 1.0.9', '~> 1.0'"
     end
   end
+
+  context 'create config' do
+    it 'should set path and disabled shared gems' do
+      @bf.create_gemfile(gem_dependencies: [])
+      @bf.create_config(path: 'yy')
+      Bundler.with_clean_env do
+        Dir.chdir(@bf.dir) do
+          # this squirrelly issue with disable_shared_gems rears its head again.
+          ENV['GEM_PATH'] = nil if ENV['GEM_PATH'] == ''
+          config_dump = `bundle config`
+          expect(config_dump).to match /path\nSet for your local app \(.*\): "yy"/
+          expect(config_dump).to match /disable_shared_gems\nSet for your local app \(.*\): "true"/
+        end
+      end
+    end
+  end
 end

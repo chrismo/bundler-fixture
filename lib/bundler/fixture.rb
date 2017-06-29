@@ -90,6 +90,23 @@ class BundlerFixture
     File.open(gemfile_filename, 'w') { |f| f.puts lines }
   end
 
+  def create_config(hash)
+    config_dir = File.join(@dir, '.bundle')
+    FileUtils.makedirs config_dir
+    s = Bundler::Settings.new(config_dir)
+    hash.each_pair do |k, v|
+      # never support set_global, we don't want a test fixture jacking with an entire machine's bundler config
+      s.set_local(k, v)
+      if k.to_s == 'path'
+        if v.nil?
+          s.set_local('disable_shared_gems', nil)
+        else
+          s.set_local('disable_shared_gems', 'true')
+        end
+      end
+    end
+  end
+
   def requirement_to_s(req)
     case req
     when Gem::Requirement
