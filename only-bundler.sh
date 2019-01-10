@@ -5,9 +5,21 @@
 # including default versions installed automatically by RubyGems upgrades or
 # downgrades.
 
+# It can be used for your own purposes, but there may be some unintended side
+# effects as a result, see the following notes. If everything goes pear-shaped,
+# the reset-rubygems-bundler.sh script should get you back operational, with the
+# default RubyGems for your version of Ruby and no Bundler installed. If that
+# still isn't working, do a `gem update --system` and that should get you back
+# operational again.
+
 # NOTE: Downgrading RubyGems to some older version won't work if it's too old
 # for the current version of Ruby. You can find the RubyGems version installed
 # with Ruby at https://github.com/ruby/ruby/blob/ruby_2_4/lib/rubygems.rb
+
+# NOTE: Installing only Bundler 2.x will likely lead to raised exceptions when
+# working in a directory with a lockfile bundled with 1.x. This isn't a bug in
+# Bundler, this is a side-effect of this script being very strict about cleaning
+# out all other Bundler versions, which is an unnatural use case in real life.
 
 set -x
 
@@ -21,7 +33,12 @@ RUBYGEMS_VER="$2"
 # before uninstalling all Bundler versions.
 if [[ -n "$RUBYGEMS_VER" ]]
 then
-  gem update --system ${RUBYGEMS_VER}
+  if [[ "$RUBYGEMS_VER" == "latest" ]]
+  then
+    gem update --system
+  else
+    gem update --system ${RUBYGEMS_VER}
+  fi
 fi
 
 # Show existing Bundler versions
@@ -39,7 +56,14 @@ rm -rf ${SITE_DIR}/bundler*
 
 if [[ -n "$BUNDLER_VER" ]]
 then
-  gem install bundler -v ${BUNDLER_VER} --no-document
+  # There are two paths here to install the latest, this redundancy is to
+  # support readability in scripts calling this script.
+  if [[ "$BUNDLER_VER" == "latest" ]]
+  then
+    gem install bundler --no-document
+  else
+    gem install bundler -v ${BUNDLER_VER} --no-document
+  fi
 else
   gem install bundler --no-document
 fi
