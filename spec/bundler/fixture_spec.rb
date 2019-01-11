@@ -151,7 +151,15 @@ describe Bundler::Fixture do
     end
 
     def deps_hash
-      {'foo' => '1.2', 'bar' => nil, 'qux' => ['~> 1.0', '>= 1.0.9']}
+      {'foo' => '1.2', 'bar' => nil, 'qux' => qux_requirements}
+    end
+
+    def qux_requirements
+      ['~> 1.0', '>= 1.0.9']
+    end
+
+    def expected_qux_requirements
+      @bf.requirement_to_s(Gem::Requirement.new(qux_requirements))
     end
 
     it 'supports simple string gem dependencies' do
@@ -159,7 +167,7 @@ describe Bundler::Fixture do
       guts = File.read(@bf.gemfile_filename)
       expect(guts).to have_line "gem 'foo', '1.2'"
       expect(guts).to have_line "gem 'bar'"
-      expect(guts).to have_line "gem 'qux', '~> 1.0', '>= 1.0.9'"
+      expect(guts).to have_line "gem 'qux', #{expected_qux_requirements}"
     end
 
     it 'supports gem dependency objects' do
@@ -169,7 +177,7 @@ describe Bundler::Fixture do
       guts = File.read(@bf.gemfile_filename)
       expect(guts).to have_line "gem 'foo', '1.2'"
       expect(guts).to have_line "gem 'bar'"
-      expect(guts).to have_line "gem 'qux', '>= 1.0.9', '~> 1.0'"
+      expect(guts).to have_line "gem 'qux', #{expected_qux_requirements}"
     end
   end
 
@@ -183,7 +191,7 @@ describe Bundler::Fixture do
           ENV['GEM_PATH'] = nil if ENV['GEM_PATH'] == ''
           config_dump = `bundle config`
           expect(config_dump).to match /path\nSet for your local app \(.*\): "yy"/
-          expect(config_dump).to match /disable_shared_gems\nSet for your local app \(.*\): "true"/
+          expect(config_dump).to match /disable_shared_gems\nSet for your local app \(.*\): .?true.?/
         end
       end
     end
