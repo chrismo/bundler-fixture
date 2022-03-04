@@ -73,3 +73,19 @@ matrix:
       env:
         - RUBYGEMS_VERSION=latest
         - BUNDLER_TEST_VERSION=latest
+    - rvm: 2.6.9
+      env:
+        - RUBYGEMS_VERSION=latest
+        - BUNDLER_TEST_VERSION=latest
+    - rvm: 2.7.5
+      env:
+        - RUBYGEMS_VERSION=latest
+        - BUNDLER_TEST_VERSION=latest
+    - rvm: 3.0.3
+      env:
+        - RUBYGEMS_VERSION=latest
+        - BUNDLER_TEST_VERSION=latest
+    - rvm: 3.1.1
+      env:
+        - RUBYGEMS_VERSION=latest
+        - BUNDLER_TEST_VERSION=latest
