@@ -185,7 +185,12 @@ describe Bundler::Fixture do
     it 'should set path and disabled shared gems' do
       @bf.create_gemfile(gem_dependencies: [])
       @bf.create_config(path: 'yy')
-      Bundler.with_clean_env do
+      clean_up_method = if BundlerFixture.bundler_version_or_higher('2.2.0')
+                          :with_unbundled_env
+                        else
+                          :with_clean_env
+                        end
+      Bundler.public_send(clean_up_method) do
         Dir.chdir(@bf.dir) do
           # this squirrelly issue with disable_shared_gems rears its head again.
           ENV['GEM_PATH'] = nil if ENV['GEM_PATH'] == ''
