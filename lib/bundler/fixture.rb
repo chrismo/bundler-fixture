@@ -15,7 +15,11 @@ class BundlerFixture
     FileUtils.makedirs @dir
 
     @sources = Bundler::SourceList.new
-    @sources.add_rubygems_remote('https://rubygems.org')
+    if bundler_version_or_higher('2.3.0')
+      @sources.add_global_rubygems_remote('https://rubygems.org')
+    else
+      @sources.add_rubygems_remote('https://rubygems.org')
+    end
   end
 
   def bundler_version_or_higher(version)
