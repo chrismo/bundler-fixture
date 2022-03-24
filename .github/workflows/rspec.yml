@@ -1,0 +1,86 @@
+name: rspec
+on: [push]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        versions:
+          - ruby-version: 2.3.8
+            rubygems: 2.5.2
+            bundler: 1.7.15
+          - ruby-version: 2.3.8
+            rubygems: 2.5.2
+            bundler: 1.8.9
+          - ruby-version: 2.3.8
+            rubygems: 2.5.2
+            bundler: 1.9.10
+          - ruby-version: 2.3.8
+            rubygems: 2.5.2
+            bundler: 1.10.5
+          - ruby-version: 2.3.8
+            rubygems: 2.5.2
+            bundler: 1.11.2
+          - ruby-version: 2.3.8
+            rubygems: 2.5.2
+            bundler: 1.12.5
+          - ruby-version: 2.3.8
+            rubygems: 2.5.2
+            bundler: 1.17.3
+          - ruby-version: 2.4.5
+            rubygems: 2.6.14
+            bundler: 1.13.6
+          - ruby-version: 2.4.5
+            rubygems: 2.6.14
+            bundler: 1.14.6
+          - ruby-version: 2.4.5
+            rubygems: 2.6.14
+            bundler: 1.17.3
+          - ruby-version: 2.5.3
+            rubygems: 2.7.6
+            bundler: 1.15.4
+          - ruby-version: 2.5.3
+            rubygems: 2.7.6
+            bundler: 1.16.6
+          - ruby-version: 2.5.3
+            rubygems: 2.7.6
+            bundler: 1.16.6
+          - ruby-version: 2.5.3
+            rubygems: 2.7.6
+            bundler: 1.17.3
+          - ruby-version: 2.5.3
+            rubygems: latest
+            bundler: latest
+          - ruby-version: 2.6.0
+            rubygems: 3.0.1
+            bundler: 1.17.3
+          - ruby-version: 2.6.0
+            rubygems: latest
+            bundler: 1.17.3
+          - ruby-version: 2.6.0
+            rubygems: latest
+            bundler: latest
+          - ruby-version: 2.6.9
+            rubygems: latest
+            bundler: latest
+          - ruby-version: 2.7.5
+            rubygems: latest
+            bundler: latest
+          - ruby-version: 3.0.3
+            rubygems: latest
+            bundler: latest
+          - ruby-version: 3.1.1
+            rubygems: latest
+            bundler: latest
+    steps:
+      - name: setup ruby
+        uses: ruby/setup-ruby@v1.99.0
+        with:
+          ruby-version: ${{ matrix.versions.ruby-version }}
+          rubygems: ${{ matrix.versions.rubygems }}
+          bundler: ${{ matrix.versions.bundler }}
+      - name: checkout
+        uses: actions/checkout@v2
+      - run: |
+          bundle install
+          bundle exec rspec
