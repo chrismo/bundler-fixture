@@ -11,6 +11,7 @@ jobs:
     if: github.event.pull_request.action != 'closed' || github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         versions:
           - ruby-version: 2.3.8
@@ -81,7 +82,7 @@ jobs:
             bundler: latest
     steps:
       - name: setup ruby
-        uses: ruby/setup-ruby@v1.99.0
+        uses: ruby/setup-ruby@v1.100.0
         with:
           ruby-version: ${{ matrix.versions.ruby-version }}
           rubygems: ${{ matrix.versions.rubygems }}
