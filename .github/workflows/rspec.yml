@@ -1,0 +1,12 @@
+name: rspec
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - closed
+
+jobs:
+  rspec:
+    if: github.event.pull_request.action != 'closed' || github.event.pull_request.merged == true
+    uses: ./.github/workflows/_rspec.yml
